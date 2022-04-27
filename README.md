@@ -1,6 +1,6 @@
 # VASP Docset
 
-VASP docset for [Dash](http://kapeli.com/dash/).
+[VASP](https://www.vasp.at/) (the Vienna _ab initio_ Simulation Package) docset for [Dash](http://kapeli.com/dash/).
 
 ![](screenshot.png)
 
