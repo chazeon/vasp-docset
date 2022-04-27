@@ -2,6 +2,8 @@
 
 VASP docset for [Dash](http://kapeli.com/dash/).
 
+![](screenshot.png)
+
 ## How to scrape and build docset
 
 First, install the required dependencies
