@@ -1,6 +1,6 @@
 # VASP Docset
 
-[VASP](https://www.vasp.at/) (the Vienna _ab initio_ simulation package) docset for [Dash](http://kapeli.com/dash/).
+[VASP](https://www.vasp.at/) (Vienna _ab initio_ simulation package) docset for [Dash](http://kapeli.com/dash/).
 
 ![](screenshot.png)
 
@@ -15,8 +15,8 @@ python3 -m pip install -r requirements.txt
 then run the scripts
 
 ```bash
-python3 scriptsa/scrape.py
-python3 scriptsa/vaspdoc2set.py
+python3 scripts/scrape.py
+python3 scripts/vaspdoc2set.py
 ```
 
 ## Licence
