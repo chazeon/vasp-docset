@@ -21,5 +21,5 @@ python3 scripts/vaspdoc2set.py
 
 ## Licence
 
-The code is licenced under the [MIT Licence](LICENCE).
-The original document is licenced under [GNU Free Documentation License 1.2](https://www.gnu.org/licenses/old-licenses/fdl-1.2.txt).
+- The code is licenced under the [MIT Licence](LICENCE).
+- The original VASP document is licenced under [GNU Free Documentation License 1.2](https://www.gnu.org/licenses/old-licenses/fdl-1.2.txt).
