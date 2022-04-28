@@ -19,22 +19,9 @@ cur.execute('CREATE UNIQUE INDEX anchor ON searchIndex (name, type, path);')
 
 docpath = Path(f'{DOCSET_ROOT}/Contents/Resources/Documents')
 
-# page = open(Path(docpath) / 'bookindex.html').read()
-# soup = BeautifulSoup(page)
-
-# any = re.compile('.*')
-# for tag in soup.find_all('a', {'href': any}):
-#     name = tag.text.strip()
-#     if len(name) > 1:
-#         path = tag.attrs['href'].strip()
-#         if path != 'index.html':
-#             cur.execute('INSERT OR IGNORE INTO searchIndex(name, type, path) VALUES (?,?,?)', (name, 'func', path))
-#             print('name: %s, path: %s' % (name, path))
-
 def insert_index(name, type, path):
     print(name, type, path)
     cur.execute('INSERT OR IGNORE INTO searchIndex(name, type, path) VALUES (?,?,?)', (name, type, path))
-
 
 # Categories
 
@@ -74,6 +61,7 @@ for a in soup.select("#category-members > li > a"):
     insert_index(a.text, 'Guide', a["href"])
 
 # All
+
 for file in docpath.glob("**/*.html"):
     soup = BeautifulSoup(open(file), features="lxml")
     title = soup.find("title")

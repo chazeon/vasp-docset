@@ -1,24 +1,35 @@
-import requests
-from bs4 import BeautifulSoup
-import jinja2
 import re
-from tqdm.cli import tqdm
 from pathlib import Path
+
+from tqdm.cli import tqdm
+
+import requests
 import requests_cache
+import jinja2
+from bs4 import BeautifulSoup
 
 DOCSET_ROOT = 'vasp.docset'
 
-def get_wiki_api(params):
-    PARAMS={"format":"json"}
+class MWAPI():
+
     URL = "https://www.vasp.at/wiki/api.php"
-    S = requests.Session()
-    requests_cache.install_cache('cache')
-    params = {**PARAMS, **params}
-    R = S.get(url=URL, params=params)
-    return R.json()[params['action']]
+    CACHE = 'cache'
+
+    def __init__(self) -> None:
+        self.session = requests_cache.CachedSession(self.CACHE)
+
+    def get(self, params):
+        params = {
+            'format': 'json',
+            **params
+        }
+        response = self.session.get(url=self.URL, params=params)
+        return response.json()[params['action']]
+
+mwapi = MWAPI()
 
 def get_allpages(**kwargs):
-    return get_wiki_api({
+    return mwapi.get({
         "action": "query",
         "list": "allpages",
         "aplimit": "max",
@@ -26,7 +37,7 @@ def get_allpages(**kwargs):
     })
 
 def get_allcategories(**kwargs):
-    return get_wiki_api({
+    return mwapi.get({
         "action": "query",
         "list": "allcategories",
         "aclimit": "max",
@@ -52,12 +63,11 @@ def clean_html(content):
     return str(soup)
 
 
-page_template = open("templates/page.html").read()
-page_template = template = jinja2.Template(page_template)
+page_template = jinja2.Template(open("templates/page.html").read())
 
 def scrape_page(**kwargs):
 
-    page_data = get_wiki_api({
+    page_data = mwapi.get({
         "action": "parse",
         **kwargs
     })
@@ -65,7 +75,7 @@ def scrape_page(**kwargs):
     content = page_data['text']['*']
 
     # categories
-    categorieshtml = get_wiki_api({
+    categorieshtml = mwapi.get({
         "action": "parse",
         "prop": "categorieshtml",
         **kwargs
@@ -83,11 +93,10 @@ def scrape_page(**kwargs):
         }))
 
 
-category_template = open("templates/category.html").read()
-category_template = jinja2.Template(category_template)
+category_template = jinja2.Template(open("templates/category.html").read())
 
 def get_category_members(**kwargs):
-    return get_wiki_api({
+    return mwapi.get({
         "action": "query",
         "list": "categorymembers",
         "cmlimit": "max",
@@ -97,7 +106,7 @@ def get_category_members(**kwargs):
 def scrape_category_page(**kwargs):
 
     try:
-        page_data = get_wiki_api({
+        page_data = mwapi.get({
             "action": "parse",
             **kwargs
         })
@@ -125,25 +134,30 @@ def scrape_category_page(**kwargs):
         }))
 
 
-apfrom = None
-pages = []
+if __name__ == "__main__":
 
-for category in tqdm(get_allcategories()["allcategories"]):
-    scrape_category_page(page=f'Category:{category["*"]}')
+    # Get 'Category:xxx' pages
 
-while True:
-    tmp = get_allpages(apfrom=apfrom)["allpages"]
-    pages.extend(tmp[1:])
-    if len(tmp) == 1:
-        break
-    else:
-        apfrom = tmp[-1]["title"]
+    for category in tqdm(get_allcategories()["allcategories"]):
+        scrape_category_page(page=f'Category:{category["*"]}')
 
-for page in tqdm(pages):
-    scrape_page(pageid=page["pageid"])
+    # Get entry-page list
 
-    if len(pages) < 500:
-        break
+    apfrom = None
+    pages = []
 
+    while True:
+        tmp = get_allpages(apfrom=apfrom)["allpages"]
+        pages.extend(tmp[1:])
+        if len(tmp) == 1:
+            break
+        else:
+            apfrom = tmp[-1]["title"]
 
-    # scrape_page(pageid=page["pageid"])
+    # Get entry pages
+
+    for page in tqdm(pages):
+        scrape_page(pageid=page["pageid"])
+
+        if len(pages) < 500:
+            break
