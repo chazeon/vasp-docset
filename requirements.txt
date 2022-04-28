@@ -3,3 +3,4 @@ requests-cache
 bs4
 jinja2
 tqdm
+lxml
