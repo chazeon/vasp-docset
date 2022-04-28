@@ -12,6 +12,8 @@ DOCSET_ROOT = 'vasp.docset'
 
 class MWAPI():
 
+    '''MediaWiki API'''
+
     URL = "https://www.vasp.at/wiki/api.php"
     CACHE = 'cache'
 
@@ -26,28 +28,38 @@ class MWAPI():
         response = self.session.get(url=self.URL, params=params)
         return response.json()[params['action']]
 
+    def get_allpages(self, **kwargs):
+        return self.get({
+            "action": "query",
+            "list": "allpages",
+            "aplimit": "max",
+            **kwargs
+        })
+
+    def get_allcategories(self, **kwargs):
+        return self.get({
+            "action": "query",
+            "list": "allcategories",
+            "aclimit": "max",
+            **kwargs
+        })
+
+    def get_category_members(self, **kwargs):
+        return self.get({
+            "action": "query",
+            "list": "categorymembers",
+            "cmlimit": "max",
+            **kwargs
+        })
+
 mwapi = MWAPI()
 
-def get_allpages(**kwargs):
-    return mwapi.get({
-        "action": "query",
-        "list": "allpages",
-        "aplimit": "max",
-        **kwargs
-    })
-
-def get_allcategories(**kwargs):
-    return mwapi.get({
-        "action": "query",
-        "list": "allcategories",
-        "aclimit": "max",
-        **kwargs
-    })
 
 def get_link(title):
     file = re.sub(r" ", r"_", title)
 
-def clean_html(content):
+def clean_html(content: str) -> str:
+
     soup = BeautifulSoup(content, features="lxml")
 
     for a in soup.findAll('a'):
@@ -95,14 +107,6 @@ def scrape_page(**kwargs):
 
 category_template = jinja2.Template(open("templates/category.html").read())
 
-def get_category_members(**kwargs):
-    return mwapi.get({
-        "action": "query",
-        "list": "categorymembers",
-        "cmlimit": "max",
-        **kwargs
-    })
-
 def scrape_category_page(**kwargs):
 
     try:
@@ -116,7 +120,7 @@ def scrape_category_page(**kwargs):
         title = kwargs["page"]
         content = ""
 
-    members = get_category_members(cmtitle=kwargs["page"])["categorymembers"]
+    members = mwapi.get_category_members(cmtitle=kwargs["page"])["categorymembers"]
     for member in members:
         link = re.sub(' ', '_', member["title"])
         link = re.sub(r'^Category:', r'Category%3A', link)
@@ -138,7 +142,7 @@ if __name__ == "__main__":
 
     # Get 'Category:xxx' pages
 
-    for category in tqdm(get_allcategories()["allcategories"]):
+    for category in tqdm(mwapi.get_allcategories()["allcategories"]):
         scrape_category_page(page=f'Category:{category["*"]}')
 
     # Get entry-page list
@@ -147,7 +151,7 @@ if __name__ == "__main__":
     pages = []
 
     while True:
-        tmp = get_allpages(apfrom=apfrom)["allpages"]
+        tmp = mwapi.get_allpages(apfrom=apfrom)["allpages"]
         pages.extend(tmp[1:])
         if len(tmp) == 1:
             break
