@@ -158,6 +158,3 @@ if __name__ == "__main__":
 
     for page in tqdm(pages):
         scrape_page(pageid=page["pageid"])
-
-        if len(pages) < 500:
-            break
