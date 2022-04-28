@@ -15,6 +15,7 @@ python3 -m pip install -r requirements.txt
 then run the scripts
 
 ```bash
+mkdir -p vasp.docset/Contents/Resources/Documents
 python3 scripts/scrape.py
 python3 scripts/vaspdoc2set.py
 ```
