@@ -20,7 +20,7 @@ class MWAPI():
     def __init__(self) -> None:
         self.session = requests_cache.CachedSession(self.CACHE)
 
-    def get(self, params):
+    def get(self, params) -> dict:
         params = {
             'format': 'json',
             **params
@@ -51,12 +51,22 @@ class MWAPI():
             "cmlimit": "max",
             **kwargs
         })
+    
+    def get_parsed_page(self, **kwargs):
+        return self.get({
+            "action": "parse",
+            **kwargs
+        })
+
 
 mwapi = MWAPI()
+page_template = jinja2.Template(open("templates/page.html").read())
+category_template = jinja2.Template(open("templates/category.html").read())
 
 
 def get_link(title):
     file = re.sub(r" ", r"_", title)
+
 
 def clean_html(content: str) -> str:
 
@@ -75,23 +85,22 @@ def clean_html(content: str) -> str:
     return str(soup)
 
 
-page_template = jinja2.Template(open("templates/page.html").read())
+def scrape_page(**kwargs) -> None:
 
-def scrape_page(**kwargs):
+    # Get content
 
-    page_data = mwapi.get({
-        "action": "parse",
-        **kwargs
-    })
-    title = page_data["title"]
+    page_data = mwapi.get_parsed_page(**kwargs)
+    title = page_data["displaytitle"]
     content = page_data['text']['*']
 
-    # categories
-    categorieshtml = mwapi.get({
-        "action": "parse",
-        "prop": "categorieshtml",
+    # Get categories bar
+    
+    categorieshtml = mwapi.get_parsed_page(
+        prop='categorieshtml',
         **kwargs
-    })["categorieshtml"]["*"]
+    )["categorieshtml"]["*"]
+
+    # Write to file
 
     file = re.sub(r" ", r"_", title)
     path = Path(f'{DOCSET_ROOT}/Contents/Resources/Documents/{file}.html')
@@ -99,32 +108,34 @@ def scrape_page(**kwargs):
 
     with open(path, 'w') as fp:
         fp.write(page_template.render({
-            "title": page_data["displaytitle"],
+            "title": title,
             "content": clean_html(content),
             "categorieshtml": clean_html(categorieshtml)
         }))
 
 
-category_template = jinja2.Template(open("templates/category.html").read())
 
-def scrape_category_page(**kwargs):
+def scrape_category_page(**kwargs) -> None:
+
+    # Get content
 
     try:
-        page_data = mwapi.get({
-            "action": "parse",
-            **kwargs
-        })
+        page_data = mwapi.get_parsed_page(**kwargs)
         title = page_data["title"]
         content = page_data['text']['*']
     except:
         title = kwargs["page"]
         content = ""
 
+    # Get categories members
+
     members = mwapi.get_category_members(cmtitle=kwargs["page"])["categorymembers"]
     for member in members:
         link = re.sub(' ', '_', member["title"])
         link = re.sub(r'^Category:', r'Category%3A', link)
         member["link"] = link
+
+    # Write to file
 
     file = re.sub(r" ", r"_", title)
     path = Path(f'{DOCSET_ROOT}/Contents/Resources/Documents/{file}.html')
