@@ -1,8 +1,7 @@
-#!/usr/local/bin/python
-
-import os, re, sqlite3
-from bs4 import BeautifulSoup
+import re, sqlite3
 from pathlib import Path
+from bs4 import BeautifulSoup
+from typing import Optional
 
 DOCSET_ROOT = 'vasp.docset'
 
@@ -20,53 +19,73 @@ cur.execute('CREATE UNIQUE INDEX anchor ON searchIndex (name, type, path);')
 docpath = Path(f'{DOCSET_ROOT}/Contents/Resources/Documents')
 
 def insert_index(name, type, path):
-    print(name, type, path)
     cur.execute('INSERT OR IGNORE INTO searchIndex(name, type, path) VALUES (?,?,?)', (name, type, path))
 
-# Categories
+def find_by_name(name) -> list:
+    cur.execute('SELECT * FROM searchIndex WHERE (name = ?)', (name,))
+    return cur.fetchall()
 
-for fname in docpath.glob("Category:*.html"):
-    title = re.sub("_", " ", fname.stem)
-    title = re.sub("^Category:", "", title)
-    insert_index(title, 'Category', str(fname.name))
+def find_by_path(path) -> list:
+    cur.execute('SELECT * FROM searchIndex WHERE (path = ?)', (path,))
+    return cur.fetchall()
 
-# INPUT Files
+def get_page_title(file) -> Optional[str]:
+    if Path(file).exists():
+        soup = BeautifulSoup(open(file), features="lxml")
+        title = soup.find("title")
+        return title.text
 
-for file in [
-    "Category:Files.html",
-    "Category:Input_files.html",
-    "Category:Output_files.html",
-]:
-    soup = BeautifulSoup(open(docpath / file), features="lxml")
+if __name__ == "__main__":
+
+    # Categories
+
+    for fname in docpath.glob("Category:*.html"):
+        title = re.sub("_", " ", fname.stem)
+        title = re.sub("^Category:", "", title)
+        insert_index(title, 'Category', str(fname.name))
+
+    # INPUT Files
+
+    for file in [
+        "Category:Files.html",
+        "Category:Input_files.html",
+        "Category:Output_files.html",
+    ]:
+        soup = BeautifulSoup(open(docpath / file), features="lxml")
+        for a in soup.select("#category-members > li > a"):
+            title = get_page_title(docpath / a["href"])
+            if title:
+                insert_index(title, 'File', a["href"])
+
+    # INPUT Tags
+
+    for file in [
+        "Category:INCAR.html",
+        "Category:INCAR_tag.html",
+        "Category:POTCAR_tag.html",
+    ]:
+        soup = BeautifulSoup(open(docpath / file), features="lxml")
+        for a in soup.select("#category-members > li > a"):
+            title = get_page_title(docpath / a["href"])
+            if title:
+                insert_index(title, 'Parameter', a["href"])
+
+    # Examples
+
+    soup = BeautifulSoup(open(docpath / "Category:Examples.html"), features="lxml")
     for a in soup.select("#category-members > li > a"):
-        insert_index(a.text, 'File', a["href"])
+        title = get_page_title(docpath / a["href"])
+        if title:
+            insert_index(title, 'Guide', a["href"])
 
-    
-# INPUT Tags
+    # All
 
-for file in [
-    "Category:INCAR.html",
-    "Category:INCAR_tag.html",
-    "Category:POTCAR_tag.html",
-]:
-    soup = BeautifulSoup(open(docpath / file), features="lxml")
-    for a in soup.select("#category-members > li > a"):
-        name = re.sub(' ', '_', a.text)
-        insert_index(name, 'Parameter', a["href"])
-
-# Examples
-
-soup = BeautifulSoup(open(docpath / "Category:Examples.html"), features="lxml")
-for a in soup.select("#category-members > li > a"):
-    insert_index(a.text, 'Guide', a["href"])
-
-# All
-
-for file in docpath.glob("**/*.html"):
-    soup = BeautifulSoup(open(file), features="lxml")
-    title = soup.find("title")
-    insert_index(title.text, 'Entry', str(file.relative_to(docpath)))
+    for file in docpath.glob("**/*.html"):
+        title = get_page_title(file)
+        path = str(file.relative_to(docpath))
+        if len(find_by_path(path)) == 0 and title:
+            insert_index(title, 'Entry', path)
 
 
-conn.commit()
-conn.close()
+    conn.commit()
+    conn.close()
