@@ -34,6 +34,7 @@ jobs:
           
       - name: Scrape and Build
         run: |
+          mkdir -p vasp.docset/Contents/Resources/Documents
           python3 scripts/scrape.py
           python3 scripts/vaspdoc2set.py
           
