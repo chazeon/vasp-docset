@@ -22,7 +22,7 @@ python3 scripts/vaspdoc2set.py
 
 ## Prebuilt docset [![Build docset](https://github.com/chazeon/vasp-docset/actions/workflows/build.yml/badge.svg)](https://github.com/chazeon/vasp-docset/actions/workflows/build.yml)
 
-- Avaliable as [GitHub Action Artifact](https://github.com/chazeon/vasp-docset/actions/workflows/build.yml) (or [direct link](https://nightly.link/chazeon/vasp-docset/workflows/build/master/build/vasp.tgz)).
+- Avaliable as [GitHub Action Artifact](https://github.com/chazeon/vasp-docset/actions/workflows/build.yml) (or [direct link](https://nightly.link/chazeon/vasp-docset/workflows/build/master/vasp.tgz.zip)).
 
 ## Licence
 
