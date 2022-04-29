@@ -20,9 +20,11 @@ python3 scripts/scrape.py
 python3 scripts/vaspdoc2set.py
 ```
 
-## Prebuilt docset [![Build docset](https://github.com/chazeon/vasp-docset/actions/workflows/build.yml/badge.svg)](https://github.com/chazeon/vasp-docset/actions/workflows/build.yml)
+## Prebuilt docset
 
-- Avaliable as [GitHub Action Artifact](https://github.com/chazeon/vasp-docset/actions/workflows/build.yml) (or [direct link](https://nightly.link/chazeon/vasp-docset/workflows/build/master/vasp.tgz.zip)).
+[![Build docset](https://github.com/chazeon/vasp-docset/actions/workflows/build.yml/badge.svg)](https://github.com/chazeon/vasp-docset/actions/workflows/build.yml)
+
+- Avaliable as [GitHub Action Artifact](https://github.com/chazeon/vasp-docset/actions/workflows/build.yml) (or via [direct link](https://nightly.link/chazeon/vasp-docset/workflows/build/master/vasp.tgz.zip)).
 
 ## Licence
 
